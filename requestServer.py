@@ -2,6 +2,7 @@ import requests
 import json
 
 def infer_image(image_data, url="http://127.0.0.1:8080/predictions/fastrcnn"):
+    
     response = requests.post(url, data=image_data)
     return response.text
 

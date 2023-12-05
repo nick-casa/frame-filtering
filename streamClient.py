@@ -46,16 +46,19 @@ def stream_client(src):
         if not ret:
             break
 
+        if previous_frame is None:
+            cv2.putText(frame, 'Avg Dist: N/A', (10, 450), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (1, 1, 255), 2)
+
         if previous_frame is not None:
             avg_distance = compute_sift_features(previous_frame, frame)
             avg_keypoint_match_distance_sum += avg_distance
-        if (avg_distance >= (avg_keypoint_match_distance_sum/frame_no)):
-            cv2.putText(frame, f'Avg Dist: {avg_distance}', (10, 450), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255), 2)
-            # Perform inference
-            ##print(requestServer.inferImage(frame))
-        else:
-            cv2.putText(frame, f'Avg Dist: {avg_distance}', (10, 450), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (1, 1, 255), 2)
-            # Cache lookup
+            if (avg_distance >= (avg_keypoint_match_distance_sum/frame_no)):
+                cv2.putText(frame, f'Avg Dist: {avg_distance}', (10, 450), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255), 2)
+                # Perform inference
+                print(requestServer.infer_image(frame))
+            else:
+                cv2.putText(frame, f'Avg Dist: {avg_distance}', (10, 450), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (1, 1, 255), 2)
+                # Cache lookup
 
 
         cv2.imshow('Video Stream', frame)
