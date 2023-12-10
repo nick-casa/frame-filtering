@@ -1,65 +1,81 @@
 import numpy as np
 import cv2
 import requestServer
+from sklearn.decomposition import PCA
 
-def compute_sift_features(old_frame, current_frame):
-    # Initialize SIFT detector
+# cache is a dictionary of embeddings and data, might consider using LRU cache
+cache = {}
+
+'''computes SIFT features and returns descriptors'''
+def compute_sift_features(frame):
+
+    # initialize SIFT detector
     sift = cv2.xfeatures2d.SIFT_create()
 
-    # Compute SIFT features for both frames
-    keypoints_1, descriptors_1 = sift.detectAndCompute(old_frame, None)
-    keypoints_2, descriptors_2 = sift.detectAndCompute(current_frame, None)
+    # compute SIFT features
+    keypoints, descriptors = sift.detectAndCompute(frame, None)
+    return descriptors
 
-    # BFMatcher or FLANN based matcher can be used
-    bf = cv2.BFMatcher()
-    matches = bf.knnMatch(descriptors_1, descriptors_2, k=2)
+'''reduces dimensionality of descriptors and returns embedding'''
+def compute_embeddings(descriptors):
 
-    # Apply ratio test and calculate distances
-    good_matches = []
-    total_distance = 0
-    for m, n in matches:
-        if m.distance < 0.75 * n.distance:
-            good_matches.append(m)
-            total_distance += m.distance
+    # reduce dimensionality by PCA
+    pca = PCA(n_components=20) # change this in test depending on data
+    embedding = pca.fit_transform(descriptors)
+    return embedding.mean(axis=0)
 
-    # Calculate average distance of good matches
-    if len(good_matches) > 0:
-        average_distance = total_distance / len(good_matches)
-    else:
-        average_distance = 0
+'''adds embedding and data (class label, bounding box, etc.) to cache)'''
+def add_to_cache(embedding, data):
 
-    return average_distance
+    # cache is dictionary of embeddings and data
+    key = tuple(embedding)
+    cache[key] = data # class label, bounding box, etc.
 
+'''computes similarity between cache embedding and current frame embedding'''
+def compute_similarity(current, threshold=0.5):
+
+    # iterate through cache and compute distance between current and cache
+    for key, data in cache.items():
+        distance = np.linalg.norm(np.array(current) - np.array(key))
+        if distance < threshold:
+            return True
+    return False
+
+'''stream client'''
 def stream_client(src):
-    # Load the video
+
+    # load the video
     cap = cv2.VideoCapture(src)
     if not cap.isOpened():
         print("Failed to load video.")
         exit(-1)
 
+    # set initial parameters
     previous_frame = None
     frame_no = 1
     avg_keypoint_match_distance_sum = 0
 
+    # loop through video
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
             break
 
-        if previous_frame is None:
-            cv2.putText(frame, 'Avg Dist: N/A', (10, 450), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (1, 1, 255), 2)
-
         if previous_frame is not None:
-            avg_distance = compute_sift_features(previous_frame, frame)
-            avg_keypoint_match_distance_sum += avg_distance
-            if (avg_distance >= (avg_keypoint_match_distance_sum/frame_no)):
-                cv2.putText(frame, f'Avg Dist: {avg_distance}', (10, 450), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255), 2)
-                # Perform inference
-                print(requestServer.infer_image(frame))
-            else:
-                cv2.putText(frame, f'Avg Dist: {avg_distance}', (10, 450), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (1, 1, 255), 2)
-                # Cache lookup
 
+            # compute SIFT features and embeddings
+            descriptors = compute_sift_features(previous_frame)
+            embedding = compute_embeddings(descriptors)
+
+            # compare to cache
+            if not compute_similarity(embedding):
+
+                # send to server
+                response = requestServer.infer_image(frame)
+                print(response) # for testing
+
+                # add to cache
+                add_to_cache(embedding, response)
 
         cv2.imshow('Video Stream', frame)
 
