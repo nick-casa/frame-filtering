@@ -28,14 +28,14 @@ def compute_embeddings(descriptors):
 def add_to_cache(embedding, data):
 
     # cache is dictionary of embeddings and data
-    key = tuple(embedding)
+    key = tuple(embedding) # could consider implementing hash
     cache[key] = data # class label, bounding box, etc.
 
 '''computes similarity between cache embedding and current frame embedding'''
 def compute_similarity(current, threshold=0.5):
 
     # iterate through cache and compute distance between current and cache
-    for key, data in cache.items():
+    for key, data in cache.items(): 
         distance = np.linalg.norm(np.array(current) - np.array(key))
         if distance < threshold:
             return True
@@ -53,7 +53,6 @@ def stream_client(src):
     # set initial parameters
     previous_frame = None
     frame_no = 1
-    avg_keypoint_match_distance_sum = 0
 
     # loop through video
     while cap.isOpened():
