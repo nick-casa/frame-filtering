@@ -10,7 +10,7 @@ cache = {}
 def compute_sift_features(frame):
 
     # initialize SIFT detector
-    sift = cv2.xfeatures2d.SIFT_create()
+    sift = cv2.SIFT_create()
 
     # compute SIFT features
     keypoints, descriptors = sift.detectAndCompute(frame, None)
@@ -40,6 +40,13 @@ def stream_client(src):
         print("Failed to load video.")
         exit(-1)
 
+    # initialize previous frame
+    ret, previous_frame = cap.read()
+    if not ret:
+        print("Failed to read the first frame.") 
+        exit(-1)
+
+    frame_no = 0
 
     # loop through video
     while cap.isOpened():
@@ -47,12 +54,14 @@ def stream_client(src):
         if not ret:
             break
 
+        print(frame_no)
+
         # compute SIFT features and embeddings
         descriptors = compute_sift_features(previous_frame)
         embedding = compute_embeddings(descriptors)
 
         # send to server without comparing to cache
-        response = requestServer.infer_image(frame)
+        response = requestServer.infer_test2(frame)
         print(response) # for testing
 
         # add to cache
@@ -70,4 +79,5 @@ def stream_client(src):
     cv2.destroyAllWindows()
 
 if __name__ == '__main__':
-    stream_client('video_crazyflie.avi')
+    # stream_client('video_crazyflie.avi')
+    stream_client('VIRAT_S_010003_07_000608_000636.avi')
