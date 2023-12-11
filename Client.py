@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 import requestServer
 from sklearn.decomposition import PCA
+import LRUCache
 
 # cache is a dictionary of embeddings and data, might consider using LRU cache
 cache = {}
@@ -31,8 +32,30 @@ def add_to_cache(embedding, data):
     key = tuple(embedding) # could consider implementing hash
     cache[key] = data # class label, bounding box, etc.
 
+
+''' finds the cosine similarity between a and b (embeddings)'''
+def cosine_similarity(a, b):
+    return np.dot(a, b) / (np.lingalg.norm(a) * np.lingalg.norm(b))
+
+''' finds the most similar images in cache (above threshold) '''
+def find_in_cache(embedding, cache, threshold=0.8):
+    most_similar = None
+    highest_similarity = 0
+
+    for cached_embedding in cache.cache.keys():
+        similarity = cosine_similarity(embedding, np.array(cached_embedding))
+        if similarity > highest_similarity:
+            highest_similarity = similarity
+            most_similar = cached_embedding
+
+    if highest_similarity >= threshold:
+        return cache.get(most_similar)
+    else:
+        return None
+
+
 '''stream client'''
-def stream_client(src):
+def stream_client(src, cache_size=100):
 
     # load the video
     cap = cv2.VideoCapture(src)
@@ -43,9 +66,10 @@ def stream_client(src):
     # initialize previous frame
     ret, previous_frame = cap.read()
     if not ret:
-        print("Failed to read the first frame.") 
+        print("Failed to read the first frame.")
         exit(-1)
 
+    cache = LRUCache(capacity=cache_size)
     frame_no = 0
 
     # loop through video
@@ -54,18 +78,24 @@ def stream_client(src):
         if not ret:
             break
 
-        print(frame_no)
-
+        #print(frame_no)
         # compute SIFT features and embeddings
         descriptors = compute_sift_features(previous_frame)
         embedding = compute_embeddings(descriptors)
 
-        # send to server without comparing to cache
-        response = requestServer.infer_test2(frame)
-        print(response) # for testing
+        cached_response = find_in_cache(embedding, cache)
+        if cached_response is not None:
+            response = cached_response
+        else:
+            response = requestServer.infer_test2(frame)
+            cache.put(tuple(embedding), response)
 
+        print(frame_no, response)
+        # send to server without comparing to cache
+        #response = requestServer.infer_test2(frame)
+        #print(response) # for testing
         # add to cache
-        add_to_cache(embedding, response)
+        #add_to_cache(embedding, response)
 
         cv2.imshow('Video Stream', frame)
 
