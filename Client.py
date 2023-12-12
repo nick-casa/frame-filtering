@@ -77,7 +77,7 @@ def stream_client(src):
 
         # show bounding boxes of dictionary label "person" in response on the frame
         for box in boxes:
-            cv2.rectangle(frame, (box[0], box[1]), (box[2], box[3]), (0, 255, 0), 2))
+            cv2.rectangle(frame, (box[0], box[1]), (box[2], box[3]), (0, 255, 0), 2)
         
         # show frame
         cv2.imshow('Video Stream', frame)
