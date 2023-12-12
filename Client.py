@@ -71,7 +71,7 @@ def stream_client(src):
         boxes = []
         for match in matches:
             match_cleaned = match.replace("\n", "").replace(" ", "")
-            box = [int(item) for item in match_cleaned.split(',')]
+            box = [int(float(item)) for item in match_cleaned.split(',')]
             boxes.append(box)
         
         # add to cache
