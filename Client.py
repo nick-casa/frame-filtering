@@ -3,9 +3,10 @@ import cv2
 import requestServer
 from sklearn.decomposition import PCA
 import json
+from collections import OrderedDict
 
 # cache is a dictionary of embeddings and data, might consider using LRU cache
-cache = {}
+cache = OrderedDict()
 
 '''computes SIFT features and returns descriptors'''
 def compute_sift_features(frame):

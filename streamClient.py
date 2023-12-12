@@ -4,8 +4,9 @@ import requestServer
 from sklearn.decomposition import PCA
 from Caches import LRUCache
 import json
+from collections import OrderedDict
 
-test_cache = {}
+test_cache = OrderedDict()
 
 def compute_embeddings(descriptors):
 
