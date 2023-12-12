@@ -1,3 +1,5 @@
+import pickle
+
 '''finds the intersection over union accuracy of two bounding boxes'''
 def bounding_box_accuracy(boxA, boxB):
 
@@ -34,25 +36,34 @@ def find_closest_box(box, boxes):
 def accuracy_of_bounding():
     with open('client_cache.pkl', 'rb') as file:
         cache = pickle.load(file)
+        print("Client\n")
+        print(cache)
+        print("------------------\n")
     
     with open('ff_client_cache.pkl', 'rb') as file:
         ff_cache = pickle.load(file)
+        print("Stream Client\n")
+        print(ff_cache)
+        print("------------------\n")
 
-    total_iou = 0
-    count = 0
+    average_frame_acc = []
 
-    for key in cache:
-        if key in ff_cache:
-            used_boxes = set()
-            for box in cache[key]['bounding_boxes']:
-                closest_box, iou = find_closest_box(box, ff_cache[key]['bounding_boxes'])
-                if closest_box and closest_box not in used_boxes:
-                    used_boxes.add(closest_box)
-                    total_iou += iou
-                    count += 1
+    for i in range(len(cache)):
+        cache_key = list(cache.keys())[i]
+        ff_cache_key = list(ff_cache.keys())[i]
+        iou_avg = 0
+        count = 0
 
-    return total_iou / count if count > 0 else 0
+        for box in cache[cache_key]['bounding_boxes']:
+            closest_box, iou = find_closest_box(box, ff_cache[ff_cache_key]['bounding_boxes'])
+            iou_avg += iou
+            print(iou)
+            count += 1
+        
+        average_frame_acc.append(iou_avg / count)
+
+    return average_frame_acc
 
 if __name__ == '__main__':
     average_accuracy = accuracy_of_bounding()
-    print("Average IoU accuracy:", average_accuracy)
+    print("Average IoU accuracy per frame:", average_accuracy)

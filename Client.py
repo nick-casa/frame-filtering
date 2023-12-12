@@ -5,6 +5,7 @@ from sklearn.decomposition import PCA
 import json
 from collections import OrderedDict
 import re
+import pickle
 
 # cache is a dictionary of embeddings and data, might consider using LRU cache
 cache = OrderedDict()
@@ -75,7 +76,7 @@ def stream_client(src):
             boxes.append(box)
         
         # add to cache
-        add_to_cache(embedding, boxes)
+        add_to_cache(embedding, {'bounding_boxes': boxes})
 
         # show bounding boxes
         for box in boxes:
@@ -92,10 +93,9 @@ def stream_client(src):
 
     cap.release()
     cv2.destroyAllWindows()
-    with open('client_cache.json', 'w') as file:
-        string = json.dumps(test_cache)
-        file.write(string)
+    with open('client_cache.pkl', 'wb') as file:
+        pickle.dump(cache, file)
 
 if __name__ == '__main__':
     # stream_client('video_crazyflie.avi')
-    stream_client('VIRAT_S_010003_07_000608_000636.avi')
+    stream_client('trimmed.mp4')

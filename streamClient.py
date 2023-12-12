@@ -54,7 +54,7 @@ def add_to_cache(embedding, data):
 
 def compute_sift_features_count(old_frame, current_frame):
     # Initialize SIFT detector
-    sift = cv2.xfeatures2d.SIFT_create()
+    sift = cv2.SIFT_create()
 
     # Compute SIFT features for both frames
     keypoints_1, descriptors_1 = sift.detectAndCompute(old_frame, None)
@@ -153,4 +153,4 @@ def stream_client(src):
         pickle.dump(test_cache, file)
 
 if __name__ == '__main__':
-    stream_client('video_crazyflie.avi')
+    stream_client('trimmed.mp4')
