@@ -88,7 +88,7 @@ def stream_client(src):
         if not ret:
             break
 
-        # Compute SIFT features and embeddings
+        # compute SIFT features and embeddings
         if previous_frame is not None:
             avg_distance = compute_sift_features_count(previous_frame, frame)
             avg_keypoint_match_distance_sum += avg_distance
@@ -98,9 +98,9 @@ def stream_client(src):
             cached_response = find_in_cache(embedding, cache)
 
             if cached_response and (avg_distance >= (avg_keypoint_match_distance_sum/frame_no)):
-                # Use cached response
-                response = cached_response
 
+                # use cached response
+                response = cached_response
                 matches = re.findall(r'"person": \[([^\]]*)\]', response)
                 boxes = []
                 for match in matches:
@@ -108,11 +108,13 @@ def stream_client(src):
                     box = [int(round(float(item))) for item in match_cleaned.split(',')]
                     boxes.append(box)
                 
-                # add to cache
+                # add to test cache
                 test_cache.put(tuple(embedding), boxes)
                 cv2.putText(frame, 'Cached Response Used', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 255, 0), 2)
+
             else:
-                # Perform inference and update cache
+
+                # perform inference and update cache
                 response = requestServer.infer_test2(frame)
                 matches = re.findall(r'"person": \[([^\]]*)\]', response)
                 boxes = []
