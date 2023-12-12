@@ -6,6 +6,7 @@ from Caches import LRUCache
 import json
 from collections import OrderedDict
 import re
+import pickle
 
 test_cache = OrderedDict()
 
@@ -148,9 +149,8 @@ def stream_client(src):
 
     cap.release()
     cv2.destroyAllWindows()
-    with open('ff_client_cache.json', 'w') as file:
-        string = json.dumps(test_cache)
-        file.write(string)
+    with open('ff_client_cache.pkl', 'wb') as file:
+        pickle.dump(test_cache, file)
 
 if __name__ == '__main__':
     stream_client('video_crazyflie.avi')
