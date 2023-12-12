@@ -66,12 +66,18 @@ def stream_client(src):
         response = requestServer.infer_test2(frame)
         print(response) # for testing
 
+        matches = re.findall(r'"person": (\[[^\]]*\])', response)
+        boxes = []
+        for match in matches:
+            box = ast.literal_eval(match)
+            boxes.append(box)
+        
         # add to cache
-        add_to_cache(embedding, response)
+        add_to_cache(embedding, boxes)
 
         # show bounding boxes of dictionary label "person" in response on the frame
-        for box in response['person']:
-            cv2.rectangle(frame, (box['xmin'], box['ymin']), (box['xmax'], box['ymax']), (0, 255, 0), 2)
+        for box in boxes:
+            cv2.rectangle(frame, (box[0], box[1], (box[2], box[3]), (0, 255, 0), 2))
         
         # show frame
         cv2.imshow('Video Stream', frame)
