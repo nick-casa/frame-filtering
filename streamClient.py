@@ -5,6 +5,7 @@ from sklearn.decomposition import PCA
 from Caches import LRUCache
 import json
 from collections import OrderedDict
+import re
 
 test_cache = OrderedDict()
 
@@ -99,15 +100,30 @@ def stream_client(src):
             if cached_response and (avg_distance >= (avg_keypoint_match_distance_sum/frame_no)):
                 # Use cached response
                 response = cached_response
-                test_cache.put(tuple(embedding), response)
+
+                matches = re.findall(r'"person": \[([^\]]*)\]', response)
+                boxes = []
+                for match in matches:
+                    match_cleaned = match.replace("\n", "").replace(" ", "")
+                    box = [int(round(float(item))) for item in match_cleaned.split(',')]
+                    boxes.append(box)
+                
+                # add to cache
+                test_cache.put(tuple(embedding), boxes)
                 cv2.putText(frame, 'Cached Response Used', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 255, 0), 2)
             else:
                 # Perform inference and update cache
                 response = requestServer.infer_test2(frame)
-                cache.put(tuple(embedding), response)
+                matches = re.findall(r'"person": \[([^\]]*)\]', response)
+                boxes = []
+                for match in matches:
+                    match_cleaned = match.replace("\n", "").replace(" ", "")
+                    box = [int(round(float(item))) for item in match_cleaned.split(',')]
+                    boxes.append(box)
+                cache.put(tuple(embedding), boxes)
 
                 # put response in test cache for accuracy testing
-                test_cache.put(tuple(embedding), response)
+                test_cache.put(tuple(embedding), boxes)
 
             cv2.putText(frame, f'Avg Dist: {avg_distance}', (10, 450), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255), 2)
         else:
