@@ -148,8 +148,9 @@ def stream_client(src):
 
     cap.release()
     cv2.destroyAllWindows()
-    with open('ff_client_cache.json', 'w') as fp:
-        json.dumps(test_cache, fp)
+    with open('ff_client_cache.json', 'w') as file:
+        string = json.dumps(test_cache)
+        file.write(string)
 
 if __name__ == '__main__':
     stream_client('video_crazyflie.avi')
