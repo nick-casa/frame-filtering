@@ -3,6 +3,7 @@ import cv2
 import requestServer
 from sklearn.decomposition import PCA
 from Caches import LRUCache
+import json
 
 test_cache = {}
 
@@ -121,7 +122,8 @@ def stream_client(src):
 
     cap.release()
     cv2.destroyAllWindows()
-
+    with open('ff_client_cache.json', 'w') as fp:
+        json.dump(test_cache, fp)
 
 if __name__ == '__main__':
     stream_client('video_crazyflie.avi')

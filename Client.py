@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 import requestServer
 from sklearn.decomposition import PCA
+import json
 
 # cache is a dictionary of embeddings and data, might consider using LRU cache
 cache = {}
@@ -77,6 +78,9 @@ def stream_client(src):
 
     cap.release()
     cv2.destroyAllWindows()
+    with open('client_cache.json', 'w') as fp:
+        json.dump(cache, fp)
+
 
 if __name__ == '__main__':
     # stream_client('video_crazyflie.avi')
