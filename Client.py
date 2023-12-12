@@ -4,6 +4,7 @@ import requestServer
 from sklearn.decomposition import PCA
 import json
 from collections import OrderedDict
+import re
 
 # cache is a dictionary of embeddings and data, might consider using LRU cache
 cache = OrderedDict()
