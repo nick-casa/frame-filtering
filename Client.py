@@ -67,7 +67,7 @@ def stream_client(src):
         response = requestServer.infer_test2(frame)
         print(response) # for testing
 
-        matches = re.findall(r'"person": (\[[^\]]*\])', response)
+        matches = re.findall(r'"person": \[([^\]]*)\]', response)
         boxes = []
         for match in matches:
             box = [int(item) for item in match.split(',')]
