@@ -2,21 +2,8 @@ import numpy as np
 import cv2
 import requestServer
 from sklearn.decomposition import PCA
+from Caches import LRUCache
 
-# cache is a dictionary of embeddings and data, might consider using LRU cache
-cache = {}
-
-'''computes SIFT features and returns descriptors'''
-def compute_sift_features(frame):
-
-    # initialize SIFT detector
-    sift = cv2.xfeatures2d.SIFT_create()
-
-    # compute SIFT features
-    keypoints, descriptors = sift.detectAndCompute(frame, None)
-    return descriptors
-
-'''reduces dimensionality of descriptors and returns embedding'''
 def compute_embeddings(descriptors):
 
     # reduce dimensionality by PCA
@@ -24,57 +11,99 @@ def compute_embeddings(descriptors):
     embedding = pca.fit_transform(descriptors)
     return embedding.mean(axis=0)
 
-'''adds embedding and data (class label, bounding box, etc.) to cache)'''
-def add_to_cache(embedding, data):
+def cosine_similarity(a, b):
+    return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
 
-    # cache is dictionary of embeddings and data
-    key = tuple(embedding) # could consider implementing hash
-    cache[key] = data # class label, bounding box, etc.
+def find_in_cache(embedding, cache, threshold=0.8):
+    most_similar = None
+    highest_similarity = 0
 
-'''computes similarity between cache embedding and current frame embedding'''
-def compute_similarity(current, threshold=0.5):
+    for cached_embedding in cache.cache.keys():
+        similarity = cosine_similarity(embedding, np.array(cached_embedding))
+        if similarity > highest_similarity:
+            highest_similarity = similarity
+            most_similar = cached_embedding
 
-    # iterate through cache and compute distance between current and cache
-    for key, data in cache.items(): 
-        distance = np.linalg.norm(np.array(current) - np.array(key))
-        if distance < threshold:
-            return True
-    return False
+    if highest_similarity >= threshold:
+        return cache.get(most_similar)
+    else:
+        return None
 
-'''stream client'''
+'''computes SIFT features and returns descriptors'''
+def compute_sift_features(frame):
+
+    # initialize SIFT detector
+    sift = cv2.SIFT_create()
+
+    # compute SIFT features
+    keypoints, descriptors = sift.detectAndCompute(frame, None)
+    return descriptors
+
+def compute_sift_features_count(old_frame, current_frame):
+    # Initialize SIFT detector
+    sift = cv2.xfeatures2d.SIFT_create()
+
+    # Compute SIFT features for both frames
+    keypoints_1, descriptors_1 = sift.detectAndCompute(old_frame, None)
+    keypoints_2, descriptors_2 = sift.detectAndCompute(current_frame, None)
+
+    # BFMatcher or FLANN based matcher can be used
+    bf = cv2.BFMatcher()
+    matches = bf.knnMatch(descriptors_1, descriptors_2, k=2)
+
+    # Apply ratio test and calculate distances
+    good_matches = []
+    total_distance = 0
+    for m, n in matches:
+        if m.distance < 0.75 * n.distance:
+            good_matches.append(m)
+            total_distance += m.distance
+
+    # Calculate average distance of good matches
+    if len(good_matches) > 0:
+        average_distance = total_distance / len(good_matches)
+    else:
+        average_distance = 0
+
+    return average_distance
+
 def stream_client(src):
-
-    # load the video
     cap = cv2.VideoCapture(src)
     if not cap.isOpened():
         print("Failed to load video.")
-        exit(-1)
+        return
 
-    # set initial parameters
     previous_frame = None
     frame_no = 1
+    avg_keypoint_match_distance_sum = 0
+    cache = LRUCache(capacity=100)
 
-    # loop through video
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
             break
 
+        # Compute SIFT features and embeddings
         if previous_frame is not None:
+            avg_distance = compute_sift_features_count(previous_frame, frame)
+            avg_keypoint_match_distance_sum += avg_distance
 
-            # compute SIFT features and embeddings
-            descriptors = compute_sift_features(previous_frame)
+            descriptors = compute_sift_features(frame)
             embedding = compute_embeddings(descriptors)
+            cached_response = find_in_cache(embedding, cache)
 
-            # compare to cache
-            if not compute_similarity(embedding):
+            if cached_response and (avg_distance >= (avg_keypoint_match_distance_sum/frame_no)):
+                # Use cached response
+                response = cached_response
+                cv2.putText(frame, 'Cached Response Used', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 255, 0), 2)
+            else:
+                # Perform inference and update cache
+                response = requestServer.infer_test2(frame)
+                cache.put(tuple(embedding), response)
 
-                # send to server
-                response = requestServer.infer_image(frame)
-                print(response) # for testing
-
-                # add to cache
-                add_to_cache(embedding, response)
+            cv2.putText(frame, f'Avg Dist: {avg_distance}', (10, 450), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255), 2)
+        else:
+            cv2.putText(frame, 'No Previous Frame', (10, 450), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255), 2)
 
         cv2.imshow('Video Stream', frame)
 
@@ -86,6 +115,7 @@ def stream_client(src):
 
     cap.release()
     cv2.destroyAllWindows()
+
 
 if __name__ == '__main__':
     stream_client('video_crazyflie.avi')
