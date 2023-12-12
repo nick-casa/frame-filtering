@@ -44,6 +44,13 @@ def compute_sift_features(frame):
     keypoints, descriptors = sift.detectAndCompute(frame, None)
     return descriptors
 
+'''adds embedding and data (class label, bounding box, etc.) to cache)'''
+def add_to_cache(embedding, data):
+
+    # cache is dictionary of embeddings and data
+    key = tuple(embedding) # could consider implementing hash
+    test_cache[key] = data # class label, bounding box, etc.
+
 def compute_sift_features_count(old_frame, current_frame):
     # Initialize SIFT detector
     sift = cv2.xfeatures2d.SIFT_create()
@@ -109,7 +116,7 @@ def stream_client(src):
                     boxes.append(box)
                 
                 # add to test cache
-                test_cache.put(tuple(embedding), boxes)
+                add_to_cache(embedding, {'bounding_boxes': boxes})
                 cv2.putText(frame, 'Cached Response Used', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 255, 0), 2)
 
             else:
@@ -125,7 +132,7 @@ def stream_client(src):
                 cache.put(tuple(embedding), boxes)
 
                 # put response in test cache for accuracy testing
-                test_cache.put(tuple(embedding), boxes)
+                add_to_cache(embedding, {'bounding_boxes': boxes})
 
             cv2.putText(frame, f'Avg Dist: {avg_distance}', (10, 450), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255), 2)
         else:
