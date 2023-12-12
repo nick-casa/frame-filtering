@@ -19,8 +19,12 @@ def parse_objects(file_path):
                     frame_dict[frame] = [bbox]
 
     frames = sorted(frame_dict.items())
+    print(frames)
     bounding_boxes = [bboxes for _, bboxes in frames]
+
+    print("------------------------------\n")
+    print(bounding_boxes)
     return bounding_boxes
 
 if __name__ == '__main__':
-    parse_objects('./videos2/VIRAT_S_000200_00_000100_000171.viratdata.objects.txt')
+    parse_objects('./videos2/VIRAT_S_010003_07_000608_000636.viratdata.objects.txt')
