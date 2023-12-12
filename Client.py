@@ -69,6 +69,11 @@ def stream_client(src):
         # add to cache
         add_to_cache(embedding, response)
 
+        # show bounding boxes of dictionary label "person" in response on the frame
+        for box in response['person']:
+            cv2.rectangle(frame, (box['xmin'], box['ymin']), (box['xmax'], box['ymax']), (0, 255, 0), 2)
+        
+        # show frame
         cv2.imshow('Video Stream', frame)
 
         if cv2.waitKey(10) & 0xFF == ord('q'):
@@ -81,7 +86,6 @@ def stream_client(src):
     cv2.destroyAllWindows()
     with open('client_cache.json', 'w') as fp:
         json.dump(cache, fp)
-
 
 if __name__ == '__main__':
     # stream_client('video_crazyflie.avi')

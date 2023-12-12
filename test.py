@@ -39,3 +39,6 @@ def accuracy_of_bounding():
         cache_box = cache[cache_key]['bounding_box']
         ff_cache_box = ff_cache[ff_cache_key]['bounding_box']
         print(bounding_box_accuracy(cache_box, ff_cache_box))
+
+if __name__ == '__main__':
+    accuracy_of_bounding()
