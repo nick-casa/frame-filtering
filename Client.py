@@ -70,7 +70,8 @@ def stream_client(src):
         matches = re.findall(r'"person": \[([^\]]*)\]', response)
         boxes = []
         for match in matches:
-            box = [int(item) for item in match.split(',')]
+            match_cleaned = match.replace("\n", "")
+            box = [int(item) for item in match_cleaned.split(',')]
             boxes.append(box)
         
         # add to cache
