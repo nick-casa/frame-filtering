@@ -19,26 +19,40 @@ def bounding_box_accuracy(boxA, boxB):
 
     return inter_over_union
 
+def find_closest_box(box, boxes):
+    highest_iou = 0
+    closest_box = None
+        
+    # iterate through boxes
+    for b in boxes:
+        iou = bounding_box_accuracy(box, b)
+        if iou > highest_iou:
+            highest_iou = iou
+            closest_box = b
+    return closest_box, highest_iou
+
 def accuracy_of_bounding():
-    with open ('client_cache.json', 'r') as fp:
-        cache = json.load(fp)
+    with open('client_cache.pkl', 'rb') as file:
+        cache = pickle.load(file)
     
-    with open ('ff_client_cache.json', 'r') as fp:
-        ff_cache = json.load(fp)
+    with open('ff_client_cache.pkl', 'rb') as file:
+        ff_cache = pickle.load(file)
 
-    # cache and ff_cache are ordered dictionaries, compare each entry
-    cache_keys = list(cache.keys())
-    ff_cache_keys = list(ff_cache.keys())
+    total_iou = 0
+    count = 0
 
-    # compare each entry
-    for i in range(len(cache_keys)):
-        cache_key = cache_keys[i]
-        ff_cache_key = ff_cache_keys[i]
+    for key in cache:
+        if key in ff_cache:
+            used_boxes = set()
+            for box in cache[key]['bounding_boxes']:
+                closest_box, iou = find_closest_box(box, ff_cache[key]['bounding_boxes'])
+                if closest_box and closest_box not in used_boxes:
+                    used_boxes.add(closest_box)
+                    total_iou += iou
+                    count += 1
 
-        # compare bounding boxes
-        cache_box = cache[cache_key]['bounding_box']
-        ff_cache_box = ff_cache[ff_cache_key]['bounding_box']
-        print(bounding_box_accuracy(cache_box, ff_cache_box))
+    return total_iou / count if count > 0 else 0
 
 if __name__ == '__main__':
-    accuracy_of_bounding()
+    average_accuracy = accuracy_of_bounding()
+    print("Average IoU accuracy:", average_accuracy)
