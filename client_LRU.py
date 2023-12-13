@@ -115,7 +115,7 @@ def stream_client(src):
                     match_cleaned = match.replace("\n", "").replace(" ", "")
                     box = [int(round(float(item))) for item in match_cleaned.split(',')]
                     boxes.append(box)
-                
+
                 # add to test cache
                 add_to_cache(embedding, {'bounding_boxes': boxes})
                 cv2.putText(frame, 'Cached Response Used', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 255, 0), 2)
@@ -123,7 +123,7 @@ def stream_client(src):
             else:
 
                 # perform inference and update cache
-                response = requestServer.infer_test2(frame)
+                response = requestServer.infer_test2(frame, url="http://20.241.201.181:8080/predictions/fastrcnn")
                 matches = re.findall(r'"person": \[([^\]]*)\]', response)
                 boxes = []
                 for match in matches:
@@ -149,6 +149,7 @@ def stream_client(src):
 
     cap.release()
     cv2.destroyAllWindows()
+
     with open('ff_client_cache.pkl', 'wb') as file:
         pickle.dump(test_cache, file)
 

@@ -65,7 +65,7 @@ def stream_client(src):
         embedding = compute_embeddings(descriptors)
 
         # send to server without comparing to cache
-        response = requestServer.infer_test2(frame)
+        response = requestServer.infer_test2(frame, url="http://20.241.201.181:8080/predictions/fastrcnn")
         print(response) # for testing
 
         matches = re.findall(r'"person": \[([^\]]*)\]', response)
@@ -74,14 +74,14 @@ def stream_client(src):
             match_cleaned = match.replace("\n", "").replace(" ", "")
             box = [int(round(float(item))) for item in match_cleaned.split(',')]
             boxes.append(box)
-        
+
         # add to cache
         add_to_cache(embedding, {'bounding_boxes': boxes})
 
         # show bounding boxes
         for box in boxes:
             cv2.rectangle(frame, (box[0], box[1]), (box[2], box[3]), (0, 255, 0), 2)
-        
+
         # show frame
         cv2.imshow('Video Stream', frame)
 

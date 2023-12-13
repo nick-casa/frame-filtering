@@ -65,7 +65,6 @@ def infer_test2(image_input, url="http://127.0.0.1:8080/predictions/fastrcnn"):
 if __name__ == "__main__":
     # Model URL
     url = "http://20.81.126.214:8080/predictions/fastrcnn"
-    image_path = "/Users/wsethapun/serve/examples/object_detector/persons.jpg"
+    image_path = "test.png"
     image = cv2.imread(image_path)
-
     print("Response from model:",  infer_test2(image, url))
