@@ -8,7 +8,7 @@ from torchvision import transforms as T
 
 # adapted from https://github.com/pytorch/serve/issues/760
 def preprocess(img_path_or_buf):
-    
+
     raw_image = (
         Image.fromarray(cv2.imread(img_path_or_buf))
         if isinstance(img_path_or_buf, str)
@@ -64,7 +64,7 @@ def infer_test2(image_input, url="http://127.0.0.1:8080/predictions/fastrcnn"):
 
 if __name__ == "__main__":
     # Model URL
-    url = "http://127.0.0.1:8080/predictions/fastrcnn"
+    url = "http://20.81.126.214:8080/predictions/fastrcnn"
     image_path = "/Users/wsethapun/serve/examples/object_detector/persons.jpg"
     image = cv2.imread(image_path)
 
