@@ -68,15 +68,20 @@ def stream_client(src):
         response = requestServer.infer_test2(frame, url="http://20.241.201.181:8080/predictions/fastrcnn")
         print(response) # for testing
 
-        matches = re.findall(r'"person": \[([^\]]*)\]', response)
+        matches = re.findall(r'"person": \[([^\]]*)\],\n    "score": ([0-9.]+)', response)
         boxes = []
+        scores = []
         for match in matches:
-            match_cleaned = match.replace("\n", "").replace(" ", "")
-            box = [int(round(float(item))) for item in match_cleaned.split(',')]
+            box_str, score_str = match
+            box_str_cleaned = box_str.replace("\n", "").replace(" ", "")
+            box = [int(round(float(item))) for item in box_str_cleaned.split(',')]
             boxes.append(box)
 
-        # add to cache
-        add_to_cache(embedding, {'bounding_boxes': boxes})
+            score = float(score_str)
+            scores.append(score)
+        
+        # add to results
+        add_to_cache(embedding, {'bounding_boxes': boxes, 'scores': scores})
 
         # show bounding boxes
         for box in boxes:
