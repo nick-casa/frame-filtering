@@ -66,9 +66,9 @@ def stream_client(src):
 
         # send to server without comparing to cache
         response = requestServer.infer_test2(frame, url="http://20.241.201.181:8080/predictions/fastrcnn")
-        print(response) # for testing
 
-        matches = re.findall(r'"person": \[([^\]]*)\],\n    "score": ([0-9.]+)', response)
+        matches = re.findall(r'"(?:car|truck)": \[([^\]]*)\],\n    "score": ([0-9.]+)',response)
+        # matches = re.findall(r'"person": \[([^\]]*)\],\n    "score": ([0-9.]+)', response)
         boxes = []
         scores = []
         for match in matches:
@@ -98,9 +98,8 @@ def stream_client(src):
 
     cap.release()
     cv2.destroyAllWindows()
-    with open('client_cache.pkl', 'wb') as file:
+    with open('client_nofilter_cartest3.pkl', 'wb') as file:
         pickle.dump(cache, file)
 
 if __name__ == '__main__':
-    # stream_client('video_crazyflie.avi')
-    stream_client('trimmed.mp4')
+    stream_client('./videos2/trimmedVIRAT_S_010113_07_000965_001013.mp4')

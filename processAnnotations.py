@@ -3,6 +3,8 @@
 def parse_objects(file_path):
 
     person_ID = 1
+    car_ID = 2
+    vehicle_ID = 3
     frame_dict = {}
     
     with open(file_path, 'r') as file:
@@ -13,13 +15,16 @@ def parse_objects(file_path):
             if not frame in frame_dict:
                     frame_dict[frame] = []
 
-            if object_type == person_ID:
+            if object_type == car_ID or object_type == vehicle_ID:
                 bbox = [left_x, top_y, left_x + width, top_y + height]
                 frame_dict[frame].append(bbox)
 
     frames = sorted(frame_dict.items())
+
+    print(frames)
     bounding_boxes = [bboxes for _, bboxes in frames]
+
     return bounding_boxes
 
 if __name__ == '__main__':
-    parse_objects('./videos2/VIRAT_S_000200_00_000100_000171.viratdata.objects.txt')
+    parse_objects('./videos2/VIRAT_S_000200_01_000226_000268.mp4')

@@ -81,6 +81,10 @@ def compute_sift_features_count(old_frame, current_frame):
     return average_distance
 
 def stream_client(src):
+    print("start")
+
+    num_used_cache = 0
+
     cap = cv2.VideoCapture(src)
     if not cap.isOpened():
         print("Failed to load video.")
@@ -96,6 +100,8 @@ def stream_client(src):
         if not ret:
             break
 
+        print(frame_no)
+
         # compute SIFT features and embeddings
         if previous_frame is not None:
             avg_distance = compute_sift_features_count(previous_frame, frame)
@@ -106,6 +112,9 @@ def stream_client(src):
             cached_response = find_in_cache(embedding, cache)
 
             if cached_response and (avg_distance >= (avg_keypoint_match_distance_sum/frame_no)):
+
+                num_used_cache += 1
+                print(num_used_cache)
 
                 # use cached response
                 response = cached_response
@@ -154,4 +163,4 @@ def stream_client(src):
         pickle.dump(test_cache, file)
 
 if __name__ == '__main__':
-    stream_client('trimmed.mp4')
+    stream_client('VIRAT_S_010003_07_000608_000636.avi')

@@ -7,4 +7,4 @@ def read(pickle_file):
     print(pickle_file_loaded)
 
 if __name__ == '__main__':
-    read('client_nofilter_confidence_test')
+    read('client_nofilter_cartest2.pkl')

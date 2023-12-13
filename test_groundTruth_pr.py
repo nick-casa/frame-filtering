@@ -79,6 +79,9 @@ def frame_iou(modelBoxes, groundTruthBoxes):
         _, _, _, inter, union = find_closest_box(box, groundTruthBoxes)
         inter_avg += inter
         union_avg += union
+
+    if union_avg == 0:
+        return 0
     
     return inter_avg/union_avg
 
@@ -133,7 +136,7 @@ def accuracy_of_bounding(pickle_nofilter, pickle_LRU, annotation_file_path):
     return frame_similarity, iou_acc_nofilter, iou_acc_LRU, pr_acc_nofilter, pr_acc_LRU, mAP_nofilter, mAP_LRU
 
 if __name__ == '__main__':
-    frame_similarity, iou_acc_nofilter, iou_acc_LRU, pr_acc_nofilter, pr_acc_LRU, mAP_nofilter, mAP_LRU = accuracy_of_bounding('client_nofilter_confidence_test','client_nofilter_confidence_test','./videos2/VIRAT_S_010003_07_000608_000636.viratdata.objects.txt')
+    frame_similarity, iou_acc_nofilter, iou_acc_LRU, pr_acc_nofilter, pr_acc_LRU, mAP_nofilter, mAP_LRU = accuracy_of_bounding('client_nofilter_cartest3.pkl','client_nofilter_cartest3.pkl','./videos2/VIRAT_S_010113_07_000965_001013.viratdata.objects.txt')
     print("Average IoU similarity per frame between no filtering and LRU:", frame_similarity, "\n")
     print("Average IoU accuracy per frame compared to ground truth, no filtering:", iou_acc_nofilter, "\n")
     print("Average IoU accuracy per frame compated to ground truth LRU:", iou_acc_LRU, "\n")
