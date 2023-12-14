@@ -169,10 +169,3 @@ def accuracy_of_bounding(pickle_nofilter, pickle_LRU, annotation_file_path):
 
 if __name__ == '__main__':
     print(accuracy_of_bounding('client_nofilter_VIRAT_S_010111_09_000981_001014.pkl','client_LRU_VIRAT_S_010111_09_000981_001014.pkl','./videos2/VIRAT_S_010111_09_000981_001014.viratdata.objects.txt'))
-    # print("Average IoU similarity per frame between no filtering and LRU:", frame_similarity, "\n")
-    # print("Average IoU accuracy per frame compared to ground truth, no filtering:", iou_acc_nofilter, "\n")
-    # print("Average IoU accuracy per frame compated to ground truth LRU:", iou_acc_LRU, "\n")
-    # print("Precision and recall per frame compared to ground truth, no filtering:", pr_acc_nofilter, "\n")
-    # print("Precision and recall per frame compated to ground truth LRU:", pr_acc_LRU, "\n")
-    # print("mAP scores, no filtering:", mAP_nofilter, "\n")
-    # print("mAP scores, LRU:", mAP_LRU, "\n")
