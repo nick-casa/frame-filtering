@@ -7,10 +7,11 @@ import json
 from collections import OrderedDict
 import re
 import pickle
+import time
 
 from skimage.metrics import structural_similarity as compare_ssim
 
-test_cache = OrderedDict()
+results = []
 
 def compute_embeddings(descriptors):
     # reduce dimensionality by PCA
@@ -50,12 +51,20 @@ def compute_sift_features(frame):
     keypoints, descriptors = sift.detectAndCompute(frame, None)
     return descriptors
 
-'''adds embedding and data (class label, bounding box, etc.) to cache)'''
-def add_to_cache(embedding, data):
 
-    # cache is dictionary of embeddings and data
-    key = tuple(embedding) # could consider implementing hash
-    test_cache[key] = data # class label, bounding box, etc.
+def add_to_result(response):
+    matches = re.findall(r'"(?:car|truck)": \[([^\]]*)\],\n    "score": ([0-9.]+)',response)
+    boxes = []
+    scores = []
+    for match in matches:
+        box_str, score_str = match
+        box_str_cleaned = box_str.replace("\n", "").replace(" ", "")
+        box = [int(round(float(item))) for item in box_str_cleaned.split(',')]
+        boxes.append(box)
+
+        score = float(score_str)
+        scores.append(score)
+    results.append({'bounding_boxes': boxes, 'scores': scores})
 
 def compute_avg_distance_between_keypoints(old_frame, current_frame):
     # Initialize SIFT detector
@@ -86,21 +95,30 @@ def compute_avg_distance_between_keypoints(old_frame, current_frame):
     return average_distance
 
 def stream_client(src):
+
+    file_name_with_extension = src.split('/')[-1]
+    file_name = file_name_with_extension.split('.')[0]
+    if file_name.startswith('trimmed_'):
+        file_name = file_name[len('trimmed_'):]
+
+    inference_calls = 0
+    used_cache = 0
+    frame_no = 0
+
+    start = time.time()
+
     cap = cv2.VideoCapture(src)
     if not cap.isOpened():
         print("Failed to load video.")
         return
 
     previous_frame = None
-    frame_no = 1
     cache = LRUCache(capacity=10)
 
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
             break
-
-        boxes = []
 
         # compute SIFT features and embeddings
         if previous_frame is not None:
@@ -113,30 +131,21 @@ def stream_client(src):
             cached_response = find_in_cache(embedding, gray_frame, cache, threshold=0.95)
 
             if cached_response:
-                # use cached response
+                used_cache += 1
                 response = cached_response
-                cv2.putText(frame, 'Cached Response Used', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 255, 0), 2)
+                add_to_result(response)
             else:
                 # perform inference and update cache
                 response = requestServer.infer_test2(frame, url="http://20.241.201.181:8080/predictions/fastrcnn")
+                inference_calls += 1
                 cache.put(tuple(embedding), {'response': response, 'gray_frame': gray_frame})
-
-            matches = re.findall(r'"(?:car|truck)": \[([^\]]*)\],\n    "score": ([0-9.]+)',response)
-            for match in matches:
-                box_str, score_str = match
-                box_str_cleaned = box_str.replace("\n", "").replace(" ", "")
-                box = [int(round(float(item))) for item in box_str_cleaned.split(',')]
-                boxes.append(box)
-
-            add_to_cache(tuple(embedding), {'bounding_boxes': boxes})
-
-            for box in boxes:
-                    cv2.rectangle(frame, (box[0], box[1]), (box[2], box[3]), (0, 0, 255), 2)
-
-        cv2.imshow('Video Stream', frame)
-
-        if cv2.waitKey(10) & 0xFF == ord('q'):
-            break
+                add_to_result(response)
+        else: 
+            descriptors = compute_sift_features(frame)
+            embedding = compute_embeddings(descriptors)
+            response = requestServer.infer_test2(frame, url="http://20.241.201.181:8080/predictions/fastrcnn")
+            inference_calls += 1
+            add_to_result(response)
 
         previous_frame = frame.copy()
         frame_no += 1
@@ -144,8 +153,15 @@ def stream_client(src):
     cap.release()
     cv2.destroyAllWindows()
 
-    with open('ff_client_cache.pkl', 'wb') as file:
-        pickle.dump(test_cache, file)
+    end = time.time()
+
+    with open(f'client_LRU_{file_name}.pkl', 'wb') as file:
+        pickle.dump(results, file)
+
+    info = {'total frames': frame_no, 'num_inference_calls': inference_calls, 'used_cached': used_cache, 'runtime': end - start}
+
+    with open(f'client_LRU_{file_name}_info.pkl', 'wb') as file:
+        pickle.dump(info, file)
 
 if __name__ == '__main__':
-    stream_client('VIRAT_S_050300_04_001057_001122.mp4')
+    stream_client('./videos2/trimmedVIRAT_S_010113_07_000965_001013.mp4')

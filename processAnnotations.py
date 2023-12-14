@@ -25,4 +25,4 @@ def parse_objects(file_path):
     return bounding_boxes
 
 if __name__ == '__main__':
-    parse_objects('./videos2/VIRAT_S_000200_01_000226_000268.mp4')
+    parse_objects('./videos2/VIRAT_S_050301_03_000933_001046.viratdata.objects.txt')
