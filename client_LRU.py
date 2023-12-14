@@ -120,8 +120,11 @@ def stream_client(src):
         if not ret:
             break
 
-        # compute SIFT features and embeddings
+        if frame_no == 60:
+            break
+
         if previous_frame is not None:
+            # compute SIFT features and embeddings
             gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             gray_previous_frame = cv2.cvtColor(previous_frame, cv2.COLOR_BGR2GRAY)
             (score, diff) = compare_ssim(gray_previous_frame, gray_frame, full=True)
@@ -130,21 +133,22 @@ def stream_client(src):
             embedding = compute_embeddings(descriptors)
             cached_response = find_in_cache(embedding, gray_frame, cache, threshold=0.95)
 
+            # if we found a similar enough image in the cache, use it as a result
             if cached_response:
                 used_cache += 1
                 print("used cache: ",used_cache)
                 response = cached_response
                 result.append(get_result(response))
             else:
-                # perform inference and update cache
-                response = requestServer.infer_test2(frame, url="http://20.241.201.181:8080/predictions/fastrcnn")
+                # perform inference and add to results
+                response = requestServer.infer(frame, url="http://52.224.90.66:8080/predictions/maskrcnn")
                 inference_calls += 1
                 cache.put(tuple(embedding), {'response': response, 'gray_frame': gray_frame})
                 result.append(get_result(response))
         else: 
             descriptors = compute_sift_features(frame)
             embedding = compute_embeddings(descriptors)
-            response = requestServer.infer_test2(frame, url="http://20.241.201.181:8080/predictions/fastrcnn")
+            response = requestServer.infer(frame, url="http://52.224.90.66:8080/predictions/maskrcnn")
             inference_calls += 1
             result.append(get_result(response))
 
@@ -157,15 +161,13 @@ def stream_client(src):
 
     end = time.time()
 
-    with open(f'tt_client_LRU_{file_name}.pkl', 'wb') as file:
+    with open(f'mr_client_LRU_{file_name}.pkl', 'wb') as file:
         pickle.dump(result, file)
 
     info = {'total frames': frame_no, 'num_inference_calls': inference_calls, 'used_cached': used_cache, 'runtime': end - start}
 
-    with open(f'tt_client_LRU_{file_name}_info.pkl', 'wb') as file:
+    with open(f'mr_client_LRU_{file_name}_info.pkl', 'wb') as file:
         pickle.dump(info, file)
-
-    results = []
 
 if __name__ == '__main__':
     stream_client('./videos2/trimmed_VIRAT_S_050301_03_000933_001046.mp4')

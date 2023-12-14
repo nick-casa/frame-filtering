@@ -29,6 +29,7 @@ def bounding_box_accuracy(boxA, boxB):
     iou = inter_area/union_area
     return iou, inter_area, union_area
 
+''' finds the box which has the maximum iou out of a set of boxes'''
 def find_closest_box(box, boxes):
 
     highest_iou = 0
@@ -50,6 +51,7 @@ def find_closest_box(box, boxes):
             closest_box_idx = i 
     return closest_box, closest_box_idx, highest_iou, highest_inter, highest_union
 
+''' calculates precision, recall, and F1 score'''
 def precision_recall(modelBoxes, groundTruthBoxes, threshold = 0.5):
     TP = 0
     FP = 0
@@ -71,11 +73,24 @@ def precision_recall(modelBoxes, groundTruthBoxes, threshold = 0.5):
     
     FN += np.sum(groundTruthUnused)
 
-    precision = TP / (TP + FP)
-    recall = TP / (TP + FN)
-    F1 = 2*precision*recall/(precision + recall)
+    if TP + FP == 0:
+        precision = 0
+    else :
+        precision = TP / (TP + FP)
+
+    if TP + FN == 0:
+        recall = 0
+    else:
+        recall = TP / (TP + FN)
+    
+    if precision + recall == 0:
+        F1 = 0
+    else:
+        F1 = 2*precision*recall/(precision + recall)
+
     return [precision, recall, F1]
 
+''' calculates the intersection over union of each frame'''
 def frame_iou(modelBoxes, groundTruthBoxes):
     inter_avg = 0
     union_avg = 0
@@ -90,6 +105,7 @@ def frame_iou(modelBoxes, groundTruthBoxes):
     
     return inter_avg/union_avg
 
+''' calculates mAP score'''
 def frame_mapcalc(modelBoxes, modelScores, groundTruthBoxes):
     groundTruth = {'boxes': groundTruthBoxes, 'labels' : np.ones(len(groundTruthBoxes))}
     resultDict =  {'boxes':modelBoxes, 'labels' : np.ones(len(modelBoxes)), 'scores': modelScores}
@@ -118,6 +134,9 @@ def accuracy_of_bounding(pickle_nofilter, pickle_LRU, annotation_file_path):
 
     # loop over all frames
     for i in range(len(result_nofilter)):
+
+        if i == 60:
+            break
 
         nofilterBoxes = result_nofilter[i]['bounding_boxes']
         nofilterScore = result_nofilter[i]['scores']

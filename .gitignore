@@ -3,3 +3,6 @@ framefiltering2/
 videos1/
 videos2/
 fastrcnn/
+*.pkl
+*.mp4
+*.avi

@@ -49,8 +49,11 @@ def stream_client(src):
         if not ret:
             break
 
+        if frame_no == 60:
+            break
+
         # send to server without comparing to previous results
-        response = requestServer.infer_test2(frame, url="http://20.241.201.181:8080/predictions/fastrcnn")
+        response = requestServer.infer(frame, url="http://52.224.90.66:8080/predictions/maskrcnn")
         inference_calls += 1
         result.append(get_result(response))
 
@@ -62,15 +65,14 @@ def stream_client(src):
 
     end = time.time()
 
-    with open(f'tt_client_nofilter_{file_name}.pkl', 'wb') as file:
+    with open(f'mr_client_nofilter_{file_name}.pkl', 'wb') as file:
         pickle.dump(result, file)
 
     info = {'total frames': frame_no, 'num_inference_calls': inference_calls, 'runtime': end - start}
 
-    with open(f'tt_client_nofilter_{file_name}_info.pkl', 'wb') as file:
+    with open(f'mr_client_nofilter_{file_name}_info.pkl', 'wb') as file:
         pickle.dump(info, file)
 
-    results = []
 
 if __name__ == '__main__':
     stream_client('./videos2/trimmedVIRAT_S_010113_07_000965_001013.mp4')

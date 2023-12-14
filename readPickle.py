@@ -7,4 +7,4 @@ def read(pickle_file):
     print(pickle_file_loaded)
 
 if __name__ == '__main__':
-    read('/Users/wsethapun/frame-filtering/client_nofilter_short_trim_VIRAT_S_050301_03_000933_001046.pkl')
+    read('mr_client_LRU_VIRAT_S_010111_09_000981_001014_info.pkl')

@@ -47,4 +47,4 @@ def stream(src, pickle_nofilter, pickle_LRU, annotation_file_path):
     cv2.destroyAllWindows()
 
 if __name__ == '__main__':
-    stream('./videos2/short_trim_VIRAT_S_010113_07_000965_001013.mp4','tt_client_nofilter_short_trim_VIRAT_S_010113_07_000965_001013.pkl','tt_client_LRU_short_trim_VIRAT_S_010113_07_000965_001013.pkl','./videos2/VIRAT_S_010113_07_000965_001013.viratdata.objects.txt')
+    stream('./videos2/trimmed_VIRAT_S_010111_09_000981_001014.mp4','mr_client_LRU_VIRAT_S_010111_09_000981_001014.pkl','mr_client_LRU_VIRAT_S_010111_09_000981_001014.pkl','./videos2/VIRAT_S_010111_09_000981_001014.viratdata.objects.txt')
