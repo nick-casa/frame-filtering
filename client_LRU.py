@@ -161,12 +161,12 @@ def stream_client(src):
 
     end = time.time()
 
-    with open(f'mr_client_LRU_{file_name}.pkl', 'wb') as file:
+    with open(f'client_LRU_{file_name}.pkl', 'wb') as file:
         pickle.dump(result, file)
 
     info = {'total frames': frame_no, 'num_inference_calls': inference_calls, 'used_cached': used_cache, 'runtime': end - start}
 
-    with open(f'mr_client_LRU_{file_name}_info.pkl', 'wb') as file:
+    with open(f'client_LRU_{file_name}_info.pkl', 'wb') as file:
         pickle.dump(info, file)
 
 if __name__ == '__main__':

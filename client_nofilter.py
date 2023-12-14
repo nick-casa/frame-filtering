@@ -65,14 +65,14 @@ def stream_client(src):
 
     end = time.time()
 
-    with open(f'mr_client_nofilter_{file_name}.pkl', 'wb') as file:
+    with open(f'client_nofilter_{file_name}.pkl', 'wb') as file:
         pickle.dump(result, file)
 
     info = {'total frames': frame_no, 'num_inference_calls': inference_calls, 'runtime': end - start}
 
-    with open(f'mr_client_nofilter_{file_name}_info.pkl', 'wb') as file:
+    with open(f'client_nofilter_{file_name}_info.pkl', 'wb') as file:
         pickle.dump(info, file)
 
 
 if __name__ == '__main__':
-    stream_client('./videos2/trimmedVIRAT_S_010113_07_000965_001013.mp4')
+    stream_client('trimmed_VIRAT_S_050301_03_000933_001046.mp4')
