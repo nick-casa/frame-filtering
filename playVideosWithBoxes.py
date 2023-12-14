@@ -25,8 +25,7 @@ def stream(src, pickle_nofilter, pickle_LRU, annotation_file_path):
         if not ret:
             break
 
-        # show bounding boxes 
-        #blue
+        # blue
         for box in cache_nofilter[i]['bounding_boxes']:
             cv2.rectangle(frame, (box[0], box[1]), (box[2], box[3]), (255, 0, 0), 2)
         
@@ -41,11 +40,11 @@ def stream(src, pickle_nofilter, pickle_LRU, annotation_file_path):
         # show frame
         cv2.imshow('Video Stream', frame)
 
-        if cv2.waitKey(100) & 0xFF == ord('q'):
+        if cv2.waitKey(1000000) & 0xFF == ord('q'):
             continue
 
     cap.release()
     cv2.destroyAllWindows()
 
 if __name__ == '__main__':
-    stream('./videos2/trimmedVIRAT_S_010113_07_000965_001013.mp4','client_nofilter_trimmedVIRAT_S_010113_07_000965_001013.pkl','client_LRU_trimmedVIRAT_S_010113_07_000965_001013.pkl','./videos2/VIRAT_S_010113_07_000965_001013.viratdata.objects.txt')
+    stream('./videos2/VIRAT_S_010113_07_000965_001013.mp4','client_nofilter_short_trim_VIRAT_S_010113_07_000965_001013.pkl','client_LRU_short_trim_VIRAT_S_010113_07_000965_001013.pkl','./videos2/VIRAT_S_010113_07_000965_001013.viratdata.objects.txt')

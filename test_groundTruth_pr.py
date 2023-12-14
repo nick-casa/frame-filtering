@@ -73,7 +73,7 @@ def precision_recall(modelBoxes, groundTruthBoxes, threshold = 0.5):
 
     precision = TP / (TP + FP)
     recall = TP / (TP + FN)
-    return precision, recall
+    return [precision, recall]
 
 def frame_iou(modelBoxes, groundTruthBoxes):
     inter_avg = 0
@@ -115,9 +115,11 @@ def accuracy_of_bounding(pickle_nofilter, pickle_LRU, annotation_file_path):
 
     frame_similarity = []
 
+    print(np.array(result_nofilter).shape)
 
     # loop over all frames
     for i in range(len(result_nofilter)):
+
         nofilterBoxes = result_nofilter[i]['bounding_boxes']
         nofilterScore = result_nofilter[i]['scores']
         lruBoxes = result_LRU[i]['bounding_boxes']
@@ -135,14 +137,24 @@ def accuracy_of_bounding(pickle_nofilter, pickle_LRU, annotation_file_path):
         mAP_nofilter.append(frame_mapcalc(nofilterBoxes, nofilterScore,groundTruthBoxes))
         mAP_LRU.append(frame_mapcalc(lruBoxes, lruScore,groundTruthBoxes))
 
-    return frame_similarity, iou_acc_nofilter, iou_acc_LRU, pr_acc_nofilter, pr_acc_LRU, mAP_nofilter, mAP_LRU
+    frame_similarity = np.mean(frame_similarity)
+
+    iou_acc_nofilter = np.mean(iou_acc_nofilter)
+    pr_acc_nofilter = np.mean(pr_acc_nofilter, axis = 0)
+    mAP_nofilter = np.mean(mAP_nofilter)
+
+    iou_acc_LRU = np.mean(iou_acc_LRU)
+    pr_acc_LRU = np.mean(pr_acc_LRU, axis = 0)
+    mAP_LRU = np.mean(mAP_LRU)
+
+    return frame_similarity, {"iou": iou_acc_nofilter, "precision recall": pr_acc_nofilter, "mAP": mAP_nofilter}, {"iou": iou_acc_LRU, "precision recall": pr_acc_LRU, "mAP": mAP_LRU}
 
 if __name__ == '__main__':
-    frame_similarity, iou_acc_nofilter, iou_acc_LRU, pr_acc_nofilter, pr_acc_LRU, mAP_nofilter, mAP_LRU = accuracy_of_bounding('client_nofilter_trimmedVIRAT_S_010113_07_000965_001013.pkl','client_LRU_trimmedVIRAT_S_010113_07_000965_001013.pkl','./videos2/VIRAT_S_010113_07_000965_001013.viratdata.objects.txt')
-    print("Average IoU similarity per frame between no filtering and LRU:", frame_similarity, "\n")
-    print("Average IoU accuracy per frame compared to ground truth, no filtering:", iou_acc_nofilter, "\n")
-    print("Average IoU accuracy per frame compated to ground truth LRU:", iou_acc_LRU, "\n")
-    print("Precision and recall per frame compared to ground truth, no filtering:", pr_acc_nofilter, "\n")
-    print("Precision and recall per frame compated to ground truth LRU:", pr_acc_LRU, "\n")
-    print("mAP scores, no filtering:", mAP_nofilter, "\n")
-    print("mAP scores, LRU:", mAP_LRU, "\n")
+    print(accuracy_of_bounding('client_nofilter_VIRAT_S_010111_09_000981_001014.pkl','client_LRU_VIRAT_S_010111_09_000981_001014.pkl','./videos2/VIRAT_S_010111_09_000981_001014.viratdata.objects.txt'))
+    # print("Average IoU similarity per frame between no filtering and LRU:", frame_similarity, "\n")
+    # print("Average IoU accuracy per frame compared to ground truth, no filtering:", iou_acc_nofilter, "\n")
+    # print("Average IoU accuracy per frame compated to ground truth LRU:", iou_acc_LRU, "\n")
+    # print("Precision and recall per frame compared to ground truth, no filtering:", pr_acc_nofilter, "\n")
+    # print("Precision and recall per frame compated to ground truth LRU:", pr_acc_LRU, "\n")
+    # print("mAP scores, no filtering:", mAP_nofilter, "\n")
+    # print("mAP scores, LRU:", mAP_LRU, "\n")

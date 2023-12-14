@@ -8,7 +8,6 @@ import re
 import pickle
 import time
 
-# cache is a dictionary of embeddings and data, might consider using LRU cache
 results = []
 
 def add_to_result(response):
@@ -56,6 +55,7 @@ def stream_client(src):
         add_to_result(response)
 
         frame_no += 1
+        print("frame_no: ", frame_no)
 
     cap.release()
     cv2.destroyAllWindows()

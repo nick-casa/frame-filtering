@@ -132,6 +132,7 @@ def stream_client(src):
 
             if cached_response:
                 used_cache += 1
+                print("used cache: ",used_cache)
                 response = cached_response
                 add_to_result(response)
             else:
@@ -149,6 +150,7 @@ def stream_client(src):
 
         previous_frame = frame.copy()
         frame_no += 1
+        print("frame_no: ", frame_no)
 
     cap.release()
     cv2.destroyAllWindows()
@@ -164,4 +166,4 @@ def stream_client(src):
         pickle.dump(info, file)
 
 if __name__ == '__main__':
-    stream_client('./videos2/trimmedVIRAT_S_010113_07_000965_001013.mp4')
+    print("main")
