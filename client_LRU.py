@@ -8,10 +8,11 @@ from collections import OrderedDict
 import re
 import pickle
 
+from skimage.metrics import structural_similarity as compare_ssim
+
 test_cache = OrderedDict()
 
 def compute_embeddings(descriptors):
-
     # reduce dimensionality by PCA
     pca = PCA(n_components=20) # change this in test depending on data
     embedding = pca.fit_transform(descriptors)
@@ -20,20 +21,24 @@ def compute_embeddings(descriptors):
 def cosine_similarity(a, b):
     return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
 
-def find_in_cache(embedding, cache, threshold=0.8):
-    most_similar = None
-    highest_similarity = 0
+def find_in_cache(embedding, gray_frame, cache, threshold=0.8):
+    highest_ssim = 0
+    most_similar_key = None
 
-    for cached_embedding in cache.cache.keys():
-        similarity = cosine_similarity(embedding, np.array(cached_embedding))
-        if similarity > highest_similarity:
-            highest_similarity = similarity
-            most_similar = cached_embedding
+    keys_list = list(cache.cache.keys())
 
-    if highest_similarity >= threshold:
-        return cache.get(most_similar)
+    for cached_embedding in keys_list:
+        cached_gray_frame = cache.get(cached_embedding)['gray_frame']
+        score, diff = compare_ssim(gray_frame, cached_gray_frame, full=True)
+        if score > highest_ssim:
+            highest_ssim = score
+            most_similar_key = cached_embedding
+
+    if highest_ssim >= threshold:
+        return cache.get(most_similar_key)['response']
     else:
         return None
+
 
 '''computes SIFT features and returns descriptors'''
 def compute_sift_features(frame):
@@ -52,7 +57,7 @@ def add_to_cache(embedding, data):
     key = tuple(embedding) # could consider implementing hash
     test_cache[key] = data # class label, bounding box, etc.
 
-def compute_sift_features_count(old_frame, current_frame):
+def compute_avg_distance_between_keypoints(old_frame, current_frame):
     # Initialize SIFT detector
     sift = cv2.SIFT_create()
 
@@ -81,10 +86,6 @@ def compute_sift_features_count(old_frame, current_frame):
     return average_distance
 
 def stream_client(src):
-    print("start")
-
-    num_used_cache = 0
-
     cap = cv2.VideoCapture(src)
     if not cap.isOpened():
         print("Failed to load video.")
@@ -92,61 +93,45 @@ def stream_client(src):
 
     previous_frame = None
     frame_no = 1
-    avg_keypoint_match_distance_sum = 0
-    cache = LRUCache(capacity=100)
+    cache = LRUCache(capacity=10)
 
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
             break
 
-        print(frame_no)
+        boxes = []
 
         # compute SIFT features and embeddings
         if previous_frame is not None:
-            avg_distance = compute_sift_features_count(previous_frame, frame)
-            avg_keypoint_match_distance_sum += avg_distance
+            gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            gray_previous_frame = cv2.cvtColor(previous_frame, cv2.COLOR_BGR2GRAY)
+            (score, diff) = compare_ssim(gray_previous_frame, gray_frame, full=True)
 
             descriptors = compute_sift_features(frame)
             embedding = compute_embeddings(descriptors)
-            cached_response = find_in_cache(embedding, cache)
+            cached_response = find_in_cache(embedding, gray_frame, cache, threshold=0.95)
 
-            if cached_response and (avg_distance >= (avg_keypoint_match_distance_sum/frame_no)):
-
-                num_used_cache += 1
-                print(num_used_cache)
-
+            if cached_response:
                 # use cached response
                 response = cached_response
-                matches = re.findall(r'"person": \[([^\]]*)\]', response)
-                boxes = []
-                for match in matches:
-                    match_cleaned = match.replace("\n", "").replace(" ", "")
-                    box = [int(round(float(item))) for item in match_cleaned.split(',')]
-                    boxes.append(box)
-
-                # add to test cache
-                add_to_cache(embedding, {'bounding_boxes': boxes})
                 cv2.putText(frame, 'Cached Response Used', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 255, 0), 2)
-
             else:
-
                 # perform inference and update cache
                 response = requestServer.infer_test2(frame, url="http://20.241.201.181:8080/predictions/fastrcnn")
-                matches = re.findall(r'"person": \[([^\]]*)\]', response)
-                boxes = []
-                for match in matches:
-                    match_cleaned = match.replace("\n", "").replace(" ", "")
-                    box = [int(round(float(item))) for item in match_cleaned.split(',')]
-                    boxes.append(box)
-                cache.put(tuple(embedding), boxes)
+                cache.put(tuple(embedding), {'response': response, 'gray_frame': gray_frame})
 
-                # put response in test cache for accuracy testing
-                add_to_cache(embedding, {'bounding_boxes': boxes})
+            matches = re.findall(r'"(?:car|truck)": \[([^\]]*)\],\n    "score": ([0-9.]+)',response)
+            for match in matches:
+                box_str, score_str = match
+                box_str_cleaned = box_str.replace("\n", "").replace(" ", "")
+                box = [int(round(float(item))) for item in box_str_cleaned.split(',')]
+                boxes.append(box)
 
-            cv2.putText(frame, f'Avg Dist: {avg_distance}', (10, 450), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255), 2)
-        else:
-            cv2.putText(frame, 'No Previous Frame', (10, 450), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255), 2)
+            add_to_cache(tuple(embedding), {'bounding_boxes': boxes})
+
+            for box in boxes:
+                    cv2.rectangle(frame, (box[0], box[1]), (box[2], box[3]), (0, 0, 255), 2)
 
         cv2.imshow('Video Stream', frame)
 
@@ -163,4 +148,4 @@ def stream_client(src):
         pickle.dump(test_cache, file)
 
 if __name__ == '__main__':
-    stream_client('VIRAT_S_010003_07_000608_000636.avi')
+    stream_client('VIRAT_S_050300_04_001057_001122.mp4')
