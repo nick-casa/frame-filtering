@@ -8,9 +8,7 @@ import re
 import pickle
 import time
 
-results = []
-
-def add_to_result(response):
+def get_result(response):
     matches = re.findall(r'"(?:car|truck)": \[([^\]]*)\],\n    "score": ([0-9.]+)',response)
     boxes = []
     scores = []
@@ -22,10 +20,14 @@ def add_to_result(response):
 
         score = float(score_str)
         scores.append(score)
-    results.append({'bounding_boxes': boxes, 'scores': scores})
+    return {'bounding_boxes': boxes, 'scores': scores}
 
 '''stream client'''
 def stream_client(src):
+
+    start = time.time()
+
+    result = []
 
     file_name_with_extension = src.split('/')[-1]
     file_name = file_name_with_extension.split('.')[0]
@@ -34,8 +36,6 @@ def stream_client(src):
 
     inference_calls = 0
     frame_no = 0
-
-    start = time.time()
 
     # load the video
     cap = cv2.VideoCapture(src)
@@ -49,10 +49,10 @@ def stream_client(src):
         if not ret:
             break
 
-        # send to server without comparing to cache
+        # send to server without comparing to previous results
         response = requestServer.infer_test2(frame, url="http://20.241.201.181:8080/predictions/fastrcnn")
         inference_calls += 1
-        add_to_result(response)
+        result.append(get_result(response))
 
         frame_no += 1
         print("frame_no: ", frame_no)
@@ -62,13 +62,15 @@ def stream_client(src):
 
     end = time.time()
 
-    with open(f'client_nofilter_{file_name}.pkl', 'wb') as file:
-        pickle.dump(results, file)
+    with open(f'tt_client_nofilter_{file_name}.pkl', 'wb') as file:
+        pickle.dump(result, file)
 
     info = {'total frames': frame_no, 'num_inference_calls': inference_calls, 'runtime': end - start}
 
-    with open(f'client_nofilter_{file_name}_info.pkl', 'wb') as file:
+    with open(f'tt_client_nofilter_{file_name}_info.pkl', 'wb') as file:
         pickle.dump(info, file)
+
+    results = []
 
 if __name__ == '__main__':
     stream_client('./videos2/trimmedVIRAT_S_010113_07_000965_001013.mp4')

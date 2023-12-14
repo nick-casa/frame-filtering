@@ -115,8 +115,6 @@ def accuracy_of_bounding(pickle_nofilter, pickle_LRU, annotation_file_path):
 
     frame_similarity = []
 
-    print(np.array(result_nofilter).shape)
-
     # loop over all frames
     for i in range(len(result_nofilter)):
 

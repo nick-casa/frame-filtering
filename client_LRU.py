@@ -11,8 +11,6 @@ import time
 
 from skimage.metrics import structural_similarity as compare_ssim
 
-results = []
-
 def compute_embeddings(descriptors):
     # reduce dimensionality by PCA
     pca = PCA(n_components=20) # change this in test depending on data
@@ -52,7 +50,7 @@ def compute_sift_features(frame):
     return descriptors
 
 
-def add_to_result(response):
+def get_result(response):
     matches = re.findall(r'"(?:car|truck)": \[([^\]]*)\],\n    "score": ([0-9.]+)',response)
     boxes = []
     scores = []
@@ -64,7 +62,7 @@ def add_to_result(response):
 
         score = float(score_str)
         scores.append(score)
-    results.append({'bounding_boxes': boxes, 'scores': scores})
+    return {'bounding_boxes': boxes, 'scores': scores}
 
 def compute_avg_distance_between_keypoints(old_frame, current_frame):
     # Initialize SIFT detector
@@ -96,6 +94,10 @@ def compute_avg_distance_between_keypoints(old_frame, current_frame):
 
 def stream_client(src):
 
+    start = time.time()
+
+    result = []
+
     file_name_with_extension = src.split('/')[-1]
     file_name = file_name_with_extension.split('.')[0]
     if file_name.startswith('trimmed_'):
@@ -104,8 +106,6 @@ def stream_client(src):
     inference_calls = 0
     used_cache = 0
     frame_no = 0
-
-    start = time.time()
 
     cap = cv2.VideoCapture(src)
     if not cap.isOpened():
@@ -134,19 +134,19 @@ def stream_client(src):
                 used_cache += 1
                 print("used cache: ",used_cache)
                 response = cached_response
-                add_to_result(response)
+                result.append(get_result(response))
             else:
                 # perform inference and update cache
                 response = requestServer.infer_test2(frame, url="http://20.241.201.181:8080/predictions/fastrcnn")
                 inference_calls += 1
                 cache.put(tuple(embedding), {'response': response, 'gray_frame': gray_frame})
-                add_to_result(response)
+                result.append(get_result(response))
         else: 
             descriptors = compute_sift_features(frame)
             embedding = compute_embeddings(descriptors)
             response = requestServer.infer_test2(frame, url="http://20.241.201.181:8080/predictions/fastrcnn")
             inference_calls += 1
-            add_to_result(response)
+            result.append(get_result(response))
 
         previous_frame = frame.copy()
         frame_no += 1
@@ -157,13 +157,15 @@ def stream_client(src):
 
     end = time.time()
 
-    with open(f'client_LRU_{file_name}.pkl', 'wb') as file:
-        pickle.dump(results, file)
+    with open(f'tt_client_LRU_{file_name}.pkl', 'wb') as file:
+        pickle.dump(result, file)
 
     info = {'total frames': frame_no, 'num_inference_calls': inference_calls, 'used_cached': used_cache, 'runtime': end - start}
 
-    with open(f'client_LRU_{file_name}_info.pkl', 'wb') as file:
+    with open(f'tt_client_LRU_{file_name}_info.pkl', 'wb') as file:
         pickle.dump(info, file)
 
+    results = []
+
 if __name__ == '__main__':
-    print("main")
+    stream_client('./videos2/trimmed_VIRAT_S_050301_03_000933_001046.mp4')
