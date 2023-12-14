@@ -50,7 +50,7 @@ def find_closest_box(box, boxes):
             closest_box_idx = i 
     return closest_box, closest_box_idx, highest_iou, highest_inter, highest_union
 
-def precision_recall(modelBoxes, groundTruthBoxes, threshold = 0.4):
+def precision_recall(modelBoxes, groundTruthBoxes, threshold = 0.5):
     TP = 0
     FP = 0
     FN = 0
@@ -83,6 +83,9 @@ def frame_iou(modelBoxes, groundTruthBoxes):
         _, _, _, inter, union = find_closest_box(box, groundTruthBoxes)
         inter_avg += inter
         union_avg += union
+
+    if union_avg == 0:
+        return 0
     
     return inter_avg/union_avg
 
