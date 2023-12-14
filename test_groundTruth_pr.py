@@ -16,6 +16,10 @@ def bounding_box_accuracy(boxA, boxB):
     # area of intersection
     inter_area = (xB - xA) * (yB - yA)
 
+    # if the boxes don't overlap
+    if (xA >= xB) or (yA >= yB):
+        inter_area = 0
+
     # area of other rectangles
     boxA_area = (boxA[2] - boxA[0]) * (boxA[3] - boxA[1])
     boxB_area = (boxB[2] - boxB[0]) * (boxB[3] - boxB[1])
@@ -43,7 +47,7 @@ def find_closest_box(box, boxes):
             highest_inter = inter
             highest_union = union
             closest_box = b
-            closest_box_idx - i 
+            closest_box_idx = i 
     return closest_box, closest_box_idx, highest_iou, highest_inter, highest_union
 
 def precision_recall(modelBoxes, groundTruthBoxes, threshold = 0.4):
@@ -79,9 +83,6 @@ def frame_iou(modelBoxes, groundTruthBoxes):
         _, _, _, inter, union = find_closest_box(box, groundTruthBoxes)
         inter_avg += inter
         union_avg += union
-
-    if union_avg == 0:
-        return 0
     
     return inter_avg/union_avg
 

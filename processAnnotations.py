@@ -20,8 +20,6 @@ def parse_objects(file_path):
                 frame_dict[frame].append(bbox)
 
     frames = sorted(frame_dict.items())
-
-    print(frames)
     bounding_boxes = [bboxes for _, bboxes in frames]
 
     return bounding_boxes

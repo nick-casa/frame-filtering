@@ -82,6 +82,6 @@ def accuracy_of_bounding(pickle_nofilter, pickle_LRU, annotation_file_path):
     return average_frame_acc_nofilter, average_frame_acc_LRU
 
 if __name__ == '__main__':
-    nofilter, lru = accuracy_of_bounding('client_cache.pkl','ff_client_cache.pkl','./videos2/VIRAT_S_010003_07_000608_000636.viratdata.objects.txt')
+    nofilter, lru = accuracy_of_bounding('client_nofilter_cartest3.pkl','client_nofilter_cartest3.pkl','videos2/VIRAT_S_010113_07_000965_001013.viratdata.objects.txt')
     print("Average IoU accuracy per frame, no filtering:", nofilter)
     print("Average IoU accuracy per frame, LRU:", lru)
