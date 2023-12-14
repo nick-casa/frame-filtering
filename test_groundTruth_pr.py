@@ -73,7 +73,8 @@ def precision_recall(modelBoxes, groundTruthBoxes, threshold = 0.5):
 
     precision = TP / (TP + FP)
     recall = TP / (TP + FN)
-    return [precision, recall]
+    F1 = 2*precision*recall/(precision + recall)
+    return [precision, recall, F1]
 
 def frame_iou(modelBoxes, groundTruthBoxes):
     inter_avg = 0
@@ -137,15 +138,15 @@ def accuracy_of_bounding(pickle_nofilter, pickle_LRU, annotation_file_path):
 
     frame_similarity = np.mean(frame_similarity)
 
-    iou_acc_nofilter = np.mean(iou_acc_nofilter)
-    pr_acc_nofilter = np.mean(pr_acc_nofilter, axis = 0)
-    mAP_nofilter = np.mean(mAP_nofilter)
+    iou_acc_nofilter = np.around(np.mean(iou_acc_nofilter), decimals = 2)
+    pr_acc_nofilter = np.around(np.mean(pr_acc_nofilter, axis = 0), decimals = 2)
+    mAP_nofilter = np.around(np.mean(mAP_nofilter), decimals = 2)
 
-    iou_acc_LRU = np.mean(iou_acc_LRU)
-    pr_acc_LRU = np.mean(pr_acc_LRU, axis = 0)
-    mAP_LRU = np.mean(mAP_LRU)
+    iou_acc_LRU = np.around(np.mean(iou_acc_LRU), decimals = 2)
+    pr_acc_LRU = np.around(np.mean(pr_acc_LRU, axis = 0), decimals = 2)
+    mAP_LRU = np.around(np.mean(mAP_LRU), decimals = 2)
 
-    return frame_similarity, {"iou": iou_acc_nofilter, "precision recall": pr_acc_nofilter, "mAP": mAP_nofilter}, {"iou": iou_acc_LRU, "precision recall": pr_acc_LRU, "mAP": mAP_LRU}
+    return frame_similarity, (iou_acc_nofilter, pr_acc_nofilter, mAP_nofilter), (iou_acc_LRU, pr_acc_LRU, mAP_LRU)
 
 if __name__ == '__main__':
     print(accuracy_of_bounding('client_nofilter_VIRAT_S_010111_09_000981_001014.pkl','client_LRU_VIRAT_S_010111_09_000981_001014.pkl','./videos2/VIRAT_S_010111_09_000981_001014.viratdata.objects.txt'))
