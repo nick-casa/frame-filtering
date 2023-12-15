@@ -20,7 +20,7 @@ def compute_embeddings(descriptors):
 def cosine_similarity(a, b):
     return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
 
-def find_in_cache(embedding, gray_frame, cache, threshold=0.8):
+def find_in_cache(gray_frame, cache, threshold=0.8):
     highest_ssim = 0
     most_similar_key = None
 
@@ -120,6 +120,8 @@ def stream_client(src):
         if not ret:
             break
 
+        print(frame_no)
+
         if frame_no == 60:
             break
 
@@ -129,9 +131,9 @@ def stream_client(src):
             gray_previous_frame = cv2.cvtColor(previous_frame, cv2.COLOR_BGR2GRAY)
             (score, diff) = compare_ssim(gray_previous_frame, gray_frame, full=True)
 
-            descriptors = compute_sift_features(frame)
-            embedding = compute_embeddings(descriptors)
-            cached_response = find_in_cache(embedding, gray_frame, cache, threshold=0.95)
+            # descriptors = compute_sift_features(frame)
+            # embedding = compute_embeddings(descriptors)
+            cached_response = find_in_cache(gray_frame, cache, threshold=0.95)
 
             # if we found a similar enough image in the cache, use it as a result
             if cached_response:
@@ -139,18 +141,36 @@ def stream_client(src):
                 print("used cache: ",used_cache)
                 response = cached_response
                 result.append(get_result(response))
+
+                boxes = result[-1]['bounding_boxes']
+                print(boxes)
+                for box in boxes:
+                    cv2.rectangle(frame, (box[0], box[1]), (box[2], box[3]), (0, 0, 255), 2)
+                cv2.putText(frame, 'Cached Response Used', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 255, 0), 2)
+                
             else:
                 # perform inference and add to results
-                response = requestServer.infer(frame, url="http://52.224.90.66:8080/predictions/maskrcnn")
+                response = requestServer.infer(frame, url="http://20.81.126.214:8080/predictions/fastrcnn")
                 inference_calls += 1
-                cache.put(tuple(embedding), {'response': response, 'gray_frame': gray_frame})
+                cache.put(frame_no, {'response': response, 'gray_frame': gray_frame})
                 result.append(get_result(response))
+                boxes = result[-1]['bounding_boxes']
+                print(boxes)
+                for box in boxes:
+                    cv2.rectangle(frame, (box[0], box[1]), (box[2], box[3]), (0, 0, 255), 2)
         else: 
-            descriptors = compute_sift_features(frame)
-            embedding = compute_embeddings(descriptors)
-            response = requestServer.infer(frame, url="http://52.224.90.66:8080/predictions/maskrcnn")
+            response = requestServer.infer(frame, url="http://20.81.126.214:8080/predictions/fastrcnn")
             inference_calls += 1
             result.append(get_result(response))
+            boxes = result[-1]['bounding_boxes']
+            print(boxes)
+            for box in boxes:
+                cv2.rectangle(frame, (box[0], box[1]), (box[2], box[3]), (0, 0, 255), 2)
+
+        cv2.imshow('Video Stream', frame)
+
+        if cv2.waitKey(10) & 0xFF == ord('q'):
+            break
 
         previous_frame = frame.copy()
         frame_no += 1
@@ -161,12 +181,12 @@ def stream_client(src):
 
     end = time.time()
 
-    with open(f'client_LRU_{file_name}.pkl', 'wb') as file:
+    with open(f'demo_client_LRU_{file_name}.pkl', 'wb') as file:
         pickle.dump(result, file)
 
     info = {'total frames': frame_no, 'num_inference_calls': inference_calls, 'used_cached': used_cache, 'runtime': end - start}
 
-    with open(f'client_LRU_{file_name}_info.pkl', 'wb') as file:
+    with open(f'demo_client_LRU_{file_name}_info.pkl', 'wb') as file:
         pickle.dump(info, file)
 
 if __name__ == '__main__':
