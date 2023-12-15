@@ -54,8 +54,9 @@ Replace placeholders (myResourceGroup, myRegistry, IMAGE_NAME, etc.) with actual
 # Frame-filtering
 
 - This code makes inference calls to torchserve models, to use a particular torchserve model, change arguments in `client_LRU.py`, `client_nofiltering.py` and `serverRequest.py` to reflect your server address
-- To use frame filtering, use `python client_LRU.py`, the results of inference will be saved to .pkl files, which can be evaluated for accuracy using `test_groundTruth_pr.py`
-- To use client without frame filtering, use `python client_nofiltering.py`
+- To use frame filtering, add the file path to the main function of `client_LRU.py` and run `python client_LRU.py`. The results of inference will be saved to `.pkl` files. We've provided a sample video `trimmed_VIRAT_S_050301_03_000933_001046.mp4`
+- Evaluate for accuracy by modifying file paths of `.pkl` files and video annotation files in the main function of. `test_groundTruth_pr.py`. We've the annotations for the sample video `VIRAT_S_050301_03_000933_001046.viratdata.objects.txt`
+- To use client without frame filtering run `python client_nofiltering.py`
 - `run_clients.py` can make processing several videos easier
 - To see information about runtime and number of cached frames used and total calls for inference, read the relevant `.pkl` file using `readPickle.py`
 - `python getInfo.py` can make getting information from multiple videos easier
