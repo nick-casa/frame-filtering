@@ -7,3 +7,12 @@
 - To see information about runtime and number of cached frames used and total calls for inference, read the relevant `.pkl` file using `readPickle.py`
 - `getInfo.py` can make getting information from multiple videos easier
 - Use result `.pkl` files and dataset annotation files (`.objects.txt` files) to play videos with bounding boxes via `playVideosWithBoxes.py`
+
+# Running inference server
+
+Navigate to the desired inference model directory
+`/fastrcnn` or `/maskrcnn`
+
+- Build the container with: `docker build --tag IMAGE_NAME`
+
+- Run the container with: `docker run --rm -it -p 8080:8080 -p 8081:8081 --name CONTAINER_NAME IMAGE_NAME`
