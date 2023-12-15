@@ -11,14 +11,14 @@ def printInfo(video):
     annotations = f'./videos2/{file_name}.viratdata.objects.txt'
 
     pickle_nofilter_results = f'client_nofilter_{file_name}.pkl'
-    pickle_LRU_results = f'client_LRU_{file_name}.pkl'
-
     pickle_nofilter_info = f'client_nofilter_{file_name}_info.pkl'
+
+    pickle_LRU_results = f'client_LRU_{file_name}.pkl'
     pickle_LRU_info = f'client_LRU_{file_name}_info.pkl'
     
     _, nf, lru =test_groundTruth_pr.accuracy_of_bounding(pickle_nofilter_results, pickle_LRU_results, annotations)
 
-    print(file_name, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ \n")
+    print("\n", file_name, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ \n")
     print(" \n no filter ------------------ \n")
     
     with open(pickle_nofilter_info, 'rb') as file:
@@ -34,5 +34,9 @@ def printInfo(video):
     print("iou, precision, recall, F1, mAP: ", lru)
     
 if __name__ == "__main__":
-    for video in ['./videos2/trimmed_VIRAT_S_050301_03_000933_001046.mp4']:
+    for video in ['./videos2/trimmed_VIRAT_S_010111_09_000981_001014.mp4',
+                  './videos2/trimmed_VIRAT_S_010113_07_000965_001013.mp4',
+                  './videos2/trimmed_VIRAT_S_050300_04_001057_001122.mp4',
+                  './videos2/trimmed_VIRAT_S_050300_07_001623_001690.mp4',
+                  './videos2/trimmed_VIRAT_S_050301_03_000933_001046.mp4']:
         printInfo(video)
